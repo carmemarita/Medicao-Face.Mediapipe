@@ -3,23 +3,8 @@ import math
 import cv2
 import mediapipe as mp
 
-# Inicializando o MediaPipe Face Mesh
-mp_face_mesh = mp.solutions.face_mesh
-face_mesh = mp_face_mesh.FaceMesh(
-    static_image_mode=False, 
-    max_num_faces=1, 
-    refine_landmarks=True)
-
-# Função para calcular a distância euclidiana entre dois pontos (em pixels)
-def calcular_distancia_px(ponto1, ponto2):
-    return math.sqrt((ponto1[0] - ponto2[0]) ** 2 + (ponto1[1] - ponto2[1]) ** 2)
-
 # Tamanho real da íris (em mm)
 TAMANHO_IRIS_REAL = 1.17  # largura em cm
-
-def converter_px_to_cm(tam_iris_px, medida_em_px):
-    return round((medida_em_px*TAMANHO_IRIS_REAL/tam_iris_px),2)
-
 
 # Pontos de interesse:
 TOP_OF_HEAD_INDEX = 10
@@ -48,6 +33,20 @@ GONIACO_ESQUERDO = 58
 GONIACO_DIREITO = 288
 ZIGOMATICO_ESQUERDO = 227
 ZIGOMATICO_DIREITO = 447
+
+# Função para calcular a distância euclidiana entre dois pontos (em pixels)
+def calcular_distancia_px(ponto1, ponto2):
+    return math.sqrt((ponto1[0] - ponto2[0]) ** 2 + (ponto1[1] - ponto2[1]) ** 2)
+
+def converter_px_to_cm(tam_iris_px, medida_em_px):
+    return round((medida_em_px*TAMANHO_IRIS_REAL/tam_iris_px),2)
+
+# Inicializando o MediaPipe Face Mesh
+mp_face_mesh = mp.solutions.face_mesh
+face_mesh = mp_face_mesh.FaceMesh(
+    static_image_mode=False, 
+    max_num_faces=1, 
+    refine_landmarks=True)
 
 # Inicializando o OpenCV
 cap = cv2.VideoCapture(0)
@@ -193,38 +192,38 @@ while cap.isOpened():
             # EXIBIR TEXTOS
             # Exibir texto no frame
             cv2.putText(frame, f"{now_date_time}", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
-            cv2.putText(frame, f"Tam Iris: {converter_px_to_cm(tam_iris_px, tam_iris_px)}cm", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
-            cv2.putText(frame, f"Alt Olhos ao Nariz: {converter_px_to_cm(tam_iris_px, altura_2t_rosto)}cm", (10, 65), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
-            cv2.putText(frame, f"Alt Nariz ao Queixo: {converter_px_to_cm(tam_iris_px, altura_3t_rosto)}cm", (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
-            cv2.putText(frame, f"Alt Nariz a Boca: {converter_px_to_cm(tam_iris_px, altura_3t1_rosto)}cm", (10, 95), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
-            cv2.putText(frame, f"Alt Boca ao Queixo: {converter_px_to_cm(tam_iris_px, altura_3t2_rosto)}cm", (10, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
-            cv2.putText(frame, f"Larg Entre olhos: {converter_px_to_cm(tam_iris_px, largura_entre_olhos)}cm", (10, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
-            cv2.putText(frame, f"Zigomatico: {converter_px_to_cm(tam_iris_px, largura_zigomatico_rosto)}cm", (10, 140), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
-            cv2.putText(frame, f"Goniaco: {converter_px_to_cm(tam_iris_px, largura_goniaco_rosto)}cm", (10, 155), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
+            cv2.putText(frame, f"Tam Iris: {converter_px_to_cm(tam_iris_px, tam_iris_px)}cm ({tam_iris_px}px)", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
+            cv2.putText(frame, f"Alt Olhos ao Nariz: {converter_px_to_cm(tam_iris_px, altura_2t_rosto)}cm ({altura_2t_rosto}px)", (10, 65), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
+            cv2.putText(frame, f"Alt Nariz ao Queixo: {converter_px_to_cm(tam_iris_px, altura_3t_rosto)}cm ({altura_3t_rosto}px)", (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
+            cv2.putText(frame, f"Alt Nariz a Boca: {converter_px_to_cm(tam_iris_px, altura_3t1_rosto)}cm ({altura_3t1_rosto}px)", (10, 95), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
+            cv2.putText(frame, f"Alt Boca ao Queixo: {converter_px_to_cm(tam_iris_px, altura_3t2_rosto)}cm ({altura_3t2_rosto}px)", (10, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
+            cv2.putText(frame, f"Larg Entre olhos: {converter_px_to_cm(tam_iris_px, largura_entre_olhos)}cm ({largura_entre_olhos}px)", (10, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
+            cv2.putText(frame, f"Zigomatico: {converter_px_to_cm(tam_iris_px, largura_zigomatico_rosto)}cm ({largura_zigomatico_rosto}px)", (10, 140), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
+            cv2.putText(frame, f"Goniaco: {converter_px_to_cm(tam_iris_px, largura_goniaco_rosto)}cm ({largura_goniaco_rosto}px)", (10, 155), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
             cv2.putText(frame, f"Pressione", (10, 400), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, 1)
             cv2.putText(frame, f"P: Capturar", (10, 415), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, 1)
             cv2.putText(frame, f"R: Reiniciar", (10, 430), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, 1)
             cv2.putText(frame, f"S: Salvar imagem", (10, 445), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, 1)
             cv2.putText(frame, f"Q: Sair, ESQ: Sair", (10, 460), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, 1)
 
-    ###########################################
-    # ESCREVE LINHAS
-    cv2.line(frame, (0, y_mid_eyes), (frame.shape[1], y_mid_eyes), (194, 163, 157), 1)
-                        
-    cv2.line(frame, (0, y_queixo), (frame.shape[1], y_queixo), (194, 163, 157), 1)
+            ###########################################
+            # ESCREVE LINHAS
+            cv2.line(frame, (0, y_mid_eyes), (frame.shape[1], y_mid_eyes), (194, 163, 157), 1)
+                                
+            cv2.line(frame, (0, y_queixo), (frame.shape[1], y_queixo), (194, 163, 157), 1)
 
-    if (x_base_do_nariz == x_mid_eyes or y_base_do_nariz == y_mid_eyes
-        and x_base_do_nariz == x_queixo or y_base_do_nariz == y_queixo):
-        cv2.line(frame, (0, y_base_do_nariz), (frame.shape[1], y_base_do_nariz), (244, 0, 100), 1)
-        cv2.line(frame, (x_base_do_nariz, 0), (x_base_do_nariz, frame.shape[1]), (244, 0, 100), 1)
-        imagem_capturada = frame.copy()
-        captura_feita = True
-    else:
-        cv2.line(frame, (0, y_base_do_nariz), (frame.shape[1], y_base_do_nariz), (194, 163, 157), 1)
-        cv2.line(frame, (x_base_do_nariz, 0), (x_base_do_nariz, frame.shape[1]), (194, 163, 157), 1)
+            if (x_base_do_nariz == x_mid_eyes or y_base_do_nariz == y_mid_eyes
+                and x_base_do_nariz == x_queixo or y_base_do_nariz == y_queixo):
+                cv2.line(frame, (0, y_base_do_nariz), (frame.shape[1], y_base_do_nariz), (244, 0, 100), 1)
+                cv2.line(frame, (x_base_do_nariz, 0), (x_base_do_nariz, frame.shape[1]), (244, 0, 100), 1)
+                imagem_capturada = frame.copy()
+                captura_feita = True
+            else:
+                cv2.line(frame, (0, y_base_do_nariz), (frame.shape[1], y_base_do_nariz), (194, 163, 157), 1)
+                cv2.line(frame, (x_base_do_nariz, 0), (x_base_do_nariz, frame.shape[1]), (194, 163, 157), 1)
 
     # Mostrando o frame com as linhas de divisão
-    cv2.imshow('Pontos Aureos da Beleza', frame)
+    cv2.imshow('Pontos Aureos da Face', frame)
 
     # Fechar ao pressionar 'q'
     key = cv2.waitKey(5)
