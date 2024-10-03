@@ -7,15 +7,13 @@ import mediapipe as mp
 TAMANHO_IRIS_REAL = 1.17  # largura em cm
 
 # Pontos de interesse:
-TOP_OF_HEAD_INDEX = 10
-HAIRLINE_INDEX = 151
 MID_EYES_INDEX = 9 #168
 NOSE_BASE_INDEX = 94
 CHIN_INDEX = 152
+CENTER_MOUNT = 14
 # boca
 LEFT_MOUNT = 61
 RIGTH_MOUNT = 291
-CENTER_MOUNT = 14
 # olhos
 LEFT_EYE_INTERNAL = 133
 LEFT_EYE_EXTERNAL = 263
@@ -25,9 +23,6 @@ EYE_LEFT_LOWER_POINT = 145
 EYE_RIGTH_LOWER_POINT = 374
 SOMBRANCELHA_ESQUERDA = 53
 SOMBRANCELHA_DIREITA = 283
-# orelhas
-ORELHA_ESQUERDA = 234
-ORELHA_DIREITA = 454
 # extensao da face
 GONIACO_ESQUERDO = 58 
 GONIACO_DIREITO = 288
@@ -48,7 +43,7 @@ face_mesh = mp_face_mesh.FaceMesh(
     refine_landmarks=True)
 
 # Carregar a imagem
-IMG_INFO = "data/teste9"
+IMG_INFO = "data/teste"
 image = cv2.imread(f"{IMG_INFO}.jpg")
 
 # Converter a imagem de BGR (usado pelo OpenCV) para RGB (usado pelo MediaPipe)
@@ -64,13 +59,14 @@ if results.multi_face_landmarks:
         for face_landmarks in results.multi_face_landmarks:
 
             # Obtendo os pontos chave
-            topo_da_cabeca = face_landmarks.landmark[TOP_OF_HEAD_INDEX]
             mid_eyes = face_landmarks.landmark[MID_EYES_INDEX]
             base_do_nariz = face_landmarks.landmark[NOSE_BASE_INDEX]
+            boca_ao_centro = face_landmarks.landmark[CENTER_MOUNT]
             queixo = face_landmarks.landmark[CHIN_INDEX]
+            #boca
             boca_a_esquerda = face_landmarks.landmark[LEFT_MOUNT]
             boca_a_direita = face_landmarks.landmark[RIGTH_MOUNT]
-            boca_ao_centro = face_landmarks.landmark[CENTER_MOUNT]
+            # olhos
             eye_esquerdo_interno = face_landmarks.landmark[LEFT_EYE_INTERNAL]
             eye_esquerdo_externo = face_landmarks.landmark[LEFT_EYE_EXTERNAL]
             eye_direito_interno = face_landmarks.landmark[RIGTH_EYE_INTERNAL]
@@ -79,8 +75,7 @@ if results.multi_face_landmarks:
             eye_direito_embaixo = face_landmarks.landmark[EYE_RIGTH_LOWER_POINT]
             somb_esquerda = face_landmarks.landmark[SOMBRANCELHA_ESQUERDA]
             somb_direita = face_landmarks.landmark[SOMBRANCELHA_DIREITA]
-            left_cheek = face_landmarks.landmark[ORELHA_ESQUERDA]
-            right_cheek = face_landmarks.landmark[ORELHA_DIREITA]
+            # extensao da face
             left_goniaco = face_landmarks.landmark[GONIACO_ESQUERDO]
             right_goniaco = face_landmarks.landmark[GONIACO_DIREITO]
             left_zigomatico = face_landmarks.landmark[ZIGOMATICO_ESQUERDO]
@@ -110,47 +105,28 @@ if results.multi_face_landmarks:
             ###########################################
             # MAPEANDO OS PRINCIPAIS PONTOS
             # Convertendo coordenadas normalizadas (entre 0 e 1) para pixels
-            mid_eyes_coordenadas = int(mid_eyes.x * largura), int(mid_eyes.y * altura)
             x_mid_eyes, y_mid_eyes = int(mid_eyes.x * largura), int(mid_eyes.y * altura)
-            
-            base_do_nariz_coordenadas = int(base_do_nariz.x * largura), int(base_do_nariz.y * altura)
             x_base_do_nariz, y_base_do_nariz = int(base_do_nariz.x * largura), int(base_do_nariz.y * altura)
-            
-            boca_ao_centro_coordenadas = int(boca_ao_centro.x * largura), int(boca_ao_centro.y * altura)
             x_boca_ao_centro, y_boca_ao_centro = int(boca_ao_centro.x * largura), int(boca_ao_centro.y * altura)
-
-            queixo_coordenadas = int(queixo.x * largura), int(queixo.y * altura)
             x_queixo, y_queixo = int(queixo.x * largura), int(queixo.y * altura)
-
-            eye_esquerdo_interno_coordenadas = int(eye_esquerdo_interno.x * largura), int(eye_esquerdo_interno.y * altura)
             x_eye_esquerdo_interno, y_eye_esquerdo_interno = int(eye_esquerdo_interno.x * largura), int(eye_esquerdo_interno.y * altura)
-
-            eye_direito_interno_coordenadas = int(eye_direito_interno.x * largura), int(eye_direito_interno.y * altura)
             x_eye_direito_interno, y_eye_direito_interno = int(eye_direito_interno.x * largura), int(eye_direito_interno.y * altura)
-
-            left_goniaco_coordenadas = int(left_goniaco.x * largura), int(left_goniaco.y * altura)
             x_left_goniaco, y_left_goniaco = int(left_goniaco.x * largura), int(left_goniaco.y * altura)
-
-            right_goniaco_coordenadas = int(right_goniaco.x * largura), int(right_goniaco.y * altura)
             x_right_goniaco, y_right_goniaco = int(right_goniaco.x * largura), int(right_goniaco.y * altura)
-
-            left_zigomatico_coordenadas = int(left_zigomatico.x * largura), int(left_zigomatico.y * altura)
             x_left_zigomatico, y_left_zigomatico = int(left_zigomatico.x * largura), int(left_zigomatico.y * altura)
-
-            right_zigomatico_coordenadas = int(right_zigomatico.x * largura), int(right_zigomatico.y * altura)
             x_right_zigomatico, y_right_zigomatico = int(right_zigomatico.x * largura), int(right_zigomatico.y * altura)
 
             ###########################################
             # CALCULOS
 
             # Calculando altura 2o terço do rosto - do meio dos olhos a base do nariz
-            altura_2t_rosto = y_base_do_nariz - y_mid_eyes #calcular_distancia_px(mid_eyes_coordenadas, base_do_nariz_coordenadas)
+            altura_2t_rosto = y_base_do_nariz - y_mid_eyes
             
             # Calculando altura 3o terço do rosto - da base do nariz ao queixo
-            altura_3t_rosto = y_queixo - y_base_do_nariz #calcular_distancia_px(base_do_nariz_coordenadas, queixo_coordenadas)
+            altura_3t_rosto = y_queixo - y_base_do_nariz
             
             # Calculando altura 3o terço do rosto - da base do nariz ao queixo
-            altura_3t1_rosto = y_boca_ao_centro - y_base_do_nariz#calcular_distancia_px(base_do_nariz_coordenadas, boca_a_esquerda)
+            altura_3t1_rosto = y_boca_ao_centro - y_base_do_nariz
             altura_3t2_rosto = y_queixo - y_boca_ao_centro
 
             # Calculando larguras
