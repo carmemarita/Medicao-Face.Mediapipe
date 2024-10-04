@@ -2,32 +2,11 @@ import datetime
 import math
 import cv2
 import mediapipe as mp
+import json
 
 # Tamanho real da íris (em mm)
 TAMANHO_IRIS_REAL = 1.17  # largura em cm
-
-# Pontos de interesse:
-MID_EYES_INDEX = 9 #168
-NOSE_BASE_INDEX = 94
-CHIN_INDEX = 152
-CENTER_MOUNT = 14
-# boca
-LEFT_MOUNT = 61
-RIGTH_MOUNT = 291
-# olhos
-LEFT_EYE_INTERNAL = 133
-LEFT_EYE_EXTERNAL = 263
-RIGTH_EYE_INTERNAL = 362
-RIGTH_EYE_EXTERNAL = 33
-EYE_LEFT_LOWER_POINT = 145
-EYE_RIGTH_LOWER_POINT = 374
-SOMBRANCELHA_ESQUERDA = 53
-SOMBRANCELHA_DIREITA = 283
-# extensao da face
-GONIACO_ESQUERDO = 58 
-GONIACO_DIREITO = 288
-ZIGOMATICO_ESQUERDO = 227
-ZIGOMATICO_DIREITO = 447
+VERSAO = 1.1
 
 # Função para calcular a distância euclidiana entre dois pontos (em pixels)
 def calcular_distancia_px(ponto1, ponto2):
@@ -35,6 +14,71 @@ def calcular_distancia_px(ponto1, ponto2):
 
 def converter_px_to_cm(tam_iris_px, medida_em_px):
     return round((medida_em_px*TAMANHO_IRIS_REAL/tam_iris_px),2)
+
+class Ponto:
+    def __init__(self, nome, num, x, y, z, exibir):
+        self.nome = nome
+        self.num = num
+        self.x = x
+        self.y = y
+        self.z = z
+        self.exibir = exibir
+
+    # Método para converter o objeto para um dicionário
+    def to_dict(self):
+        return {"nome": self.nome, "num": self.num, "x": self.x, "y": self.y, "z": self.z, "exibir": self.exibir}
+
+class Analise:
+    def __init__(self, versao, data, nomeArquivo, tam_iris_px, tam_iris_cm,
+                       altSegundoTerco_px, altSegundoTerco_cm, altTerceiroTerco_px, altTerceiroTerco_cm,
+                       alt1TerceiroTerco_px, alt1TerceiroTerco_cm, alt2TerceiroTerco_px, alt2TerceiroTerco_cm,
+                       largEntreOlhos_px, largEntreOlhos_cm,
+                       largGoniaco_px, largGoniaco_cm, largZigomatico_px, largura_zigomatico_cm,
+                       lstPontos):
+        self.versaoPrograma = versao
+        self.dataAnalise = data
+        self.nomeImagemAnalisada = nomeArquivo
+        self.iris_px = tam_iris_px
+        self.iris_cm = tam_iris_cm
+        self.h_2T_px = altSegundoTerco_px
+        self.h_2T_cm = altSegundoTerco_cm
+        self.h_3T_px = altTerceiroTerco_px
+        self.h_3T_cm = altTerceiroTerco_cm
+        self.h_3T1_px = alt1TerceiroTerco_px
+        self.h_3T1_cm = alt1TerceiroTerco_cm
+        self.h_3T2_px = alt2TerceiroTerco_px
+        self.h_3T2_cm = alt2TerceiroTerco_cm
+        self.l_entreOlhos_px = largEntreOlhos_px
+        self.l_entreOlhos_cm = largEntreOlhos_cm
+        self.l_goniaco_px = largGoniaco_px
+        self.l_goniaco_cm = largGoniaco_cm
+        self.l_zigomatico_px = largZigomatico_px
+        self.l_zigomatico_cm = largura_zigomatico_cm
+        self.lstPontos_dict = lstPontos
+
+    # Método para converter o objeto para um dicionário
+    def to_dict(self):
+        return {"versaoPrograma": self.versaoPrograma, 
+                "dataAnalise": self.dataAnalise, 
+                "imagemAnalisada": self.nomeImagemAnalisada, 
+                "iris_px": self.iris_px,
+                "iris_cm": self.iris_cm,
+                "h_2T_px": self.h_2T_px,
+                "h_2T_cm": self.h_2T_cm,
+                "h_3T_px": self.h_3T_px,
+                "h_3T_cm": self.h_3T_cm,
+                "h_3T1_px": self.h_3T1_px,
+                "h_3T1_cm": self.h_3T1_cm,
+                "h_3T2_px": self.h_3T2_px,
+                "h_3T2_cm": self.h_3T2_cm,
+                "l_entreOlhos_px": self.l_entreOlhos_px,
+                "l_entreOlhos_cm": self.l_entreOlhos_cm,
+                "l_goniaco_px": self.l_goniaco_px,
+                "l_goniaco_cm": self.l_goniaco_cm,
+                "l_zigomatico_px": self.l_zigomatico_px,
+                "l_zigomatico_cm": self.l_zigomatico_cm,
+                "lstPontos": self.lstPontos_dict}
+
 
 # Inicializando o MediaPipe Face Mesh
 mp_face_mesh = mp.solutions.face_mesh
@@ -54,9 +98,42 @@ results = face_mesh.process(image_rgb)
 
 now_date_time = (datetime.datetime.now()).strftime("%m/%d/%Y, %H:%M:%S")
 stg_date_time = ""
+lst_analise = []
+lst_pontos_estudo = []
+
+MID_EYES_INDEX = 9
+NOSE_BASE_INDEX = 94
+CHIN_INDEX = 152
+CENTER_MOUNT = 14
+LEFT_EYE_INTERNAL = 133
+RIGTH_EYE_INTERNAL = 362
+# extensao da face
+GONIACO_ESQUERDO = 58 
+GONIACO_DIREITO = 288
+ZIGOMATICO_ESQUERDO = 227
+ZIGOMATICO_DIREITO = 447
+
+lst_pontos_estudo.append( Ponto("MID_EYES", MID_EYES_INDEX, "", "", "", 1) )
+lst_pontos_estudo.append( Ponto("NOSE_BASE", NOSE_BASE_INDEX, "", "", "", 1) )
+lst_pontos_estudo.append( Ponto("CHIN_INDEX", CHIN_INDEX, "", "", "", 1) )
+lst_pontos_estudo.append( Ponto("CENTER_MOUNT", CENTER_MOUNT, "", "", "", 0) )
+lst_pontos_estudo.append( Ponto("LEFT_EYE_INTERNAL", LEFT_EYE_INTERNAL, "", "", "", 1) )
+lst_pontos_estudo.append( Ponto("RIGTH_EYE_INTERNAL", RIGTH_EYE_INTERNAL, "", "", "", 1) )
+lst_pontos_estudo.append( Ponto("GONIACO_ESQUERDO", GONIACO_ESQUERDO, "", "", "", 1) )
+lst_pontos_estudo.append( Ponto("GONIACO_DIREITO", GONIACO_DIREITO, "", "", "", 1) )
+lst_pontos_estudo.append( Ponto("ZIGOMATICO_ESQUERDO", ZIGOMATICO_ESQUERDO, "", "", "", 1) )
+lst_pontos_estudo.append( Ponto("ZIGOMATICO_DIREITO", ZIGOMATICO_DIREITO, "", "", "", 1) )
+lst_pontos_estudo.append( Ponto("LEFT_MOUNT", 61, "", "", "", 1) )
+lst_pontos_estudo.append( Ponto("RIGTH_MOUNT", 291, "", "", "", 1) )
+lst_pontos_estudo.append( Ponto("LEFT_EYE_EXTERNAL", 263, "", "", "", 1) )
+lst_pontos_estudo.append( Ponto("RIGTH_EYE_EXTERNAL", 33, "", "", "", 1) )
+lst_pontos_estudo.append( Ponto("EYE_LEFT_LOWER_POINT", 145, "", "", "", 0) )
+lst_pontos_estudo.append( Ponto("EYE_RIGTH_LOWER_POINT", 374, "", "", "", 0) )
+lst_pontos_estudo.append( Ponto("SOMBRANCELHA_ESQUERDA", 53, "", "", "", 1) )
+lst_pontos_estudo.append( Ponto("SOMBRANCELHA_DIREITA", 283, "", "", "", 1) )
 
 if results.multi_face_landmarks:
-        for face_landmarks in results.multi_face_landmarks:
+    for face_landmarks in results.multi_face_landmarks:
 
             # Obtendo os pontos chave
             mid_eyes = face_landmarks.landmark[MID_EYES_INDEX]
@@ -64,17 +141,8 @@ if results.multi_face_landmarks:
             boca_ao_centro = face_landmarks.landmark[CENTER_MOUNT]
             queixo = face_landmarks.landmark[CHIN_INDEX]
             #boca
-            boca_a_esquerda = face_landmarks.landmark[LEFT_MOUNT]
-            boca_a_direita = face_landmarks.landmark[RIGTH_MOUNT]
-            # olhos
             eye_esquerdo_interno = face_landmarks.landmark[LEFT_EYE_INTERNAL]
-            eye_esquerdo_externo = face_landmarks.landmark[LEFT_EYE_EXTERNAL]
             eye_direito_interno = face_landmarks.landmark[RIGTH_EYE_INTERNAL]
-            eye_direito_externo = face_landmarks.landmark[RIGTH_EYE_EXTERNAL]
-            eye_esquerdo_embaixo = face_landmarks.landmark[EYE_LEFT_LOWER_POINT]
-            eye_direito_embaixo = face_landmarks.landmark[EYE_RIGTH_LOWER_POINT]
-            somb_esquerda = face_landmarks.landmark[SOMBRANCELHA_ESQUERDA]
-            somb_direita = face_landmarks.landmark[SOMBRANCELHA_DIREITA]
             # extensao da face
             left_goniaco = face_landmarks.landmark[GONIACO_ESQUERDO]
             right_goniaco = face_landmarks.landmark[GONIACO_DIREITO]
@@ -82,14 +150,16 @@ if results.multi_face_landmarks:
             right_zigomatico = face_landmarks.landmark[ZIGOMATICO_DIREITO]
 
             altura, largura, _ = image.shape
+            i = -1
+            for ponto in lst_pontos_estudo:
+                i = i+1
+                p = face_landmarks.landmark[ponto.num]
+                lst_pontos_estudo[i].x = p.x 
+                lst_pontos_estudo[i].y = p.y 
+                lst_pontos_estudo[i].z = p.z 
 
-            pontos = [mid_eyes, base_do_nariz, queixo, boca_a_esquerda, boca_a_direita, boca_ao_centro, 
-                      eye_esquerdo_embaixo, eye_direito_embaixo, somb_esquerda, somb_direita,
-                      eye_esquerdo_interno, eye_direito_interno, eye_esquerdo_externo, eye_direito_externo,
-                      left_goniaco, right_goniaco, left_zigomatico, right_zigomatico]
-
-            for p in pontos:
-                cv2.circle(image, (int(p.x * largura), int(p.y * altura)), 2, (255, 0, 0), -1)
+                if (ponto.exibir == 1):
+                    cv2.circle(image, (int(p.x * largura), int(p.y * altura)), 2, (255, 0, 0), -1)
 
             #### IRIS
             iris1 = face_landmarks.landmark[469]
@@ -117,35 +187,44 @@ if results.multi_face_landmarks:
             x_right_zigomatico, y_right_zigomatico = int(right_zigomatico.x * largura), int(right_zigomatico.y * altura)
 
             ###########################################
-            # CALCULOS
+            # CALCULOS DISTANCIAS ENTRE OS PONTOS
 
             # Calculando altura 2o terço do rosto - do meio dos olhos a base do nariz
-            altura_2t_rosto = y_base_do_nariz - y_mid_eyes
+            altura_2t = y_base_do_nariz - y_mid_eyes
+            altura_2t_cm = converter_px_to_cm(tam_iris_px, altura_2t)
             
             # Calculando altura 3o terço do rosto - da base do nariz ao queixo
-            altura_3t_rosto = y_queixo - y_base_do_nariz
+            altura_3t = y_queixo - y_base_do_nariz
+            altura_3t_cm = converter_px_to_cm(tam_iris_px, altura_3t)
             
             # Calculando altura 3o terço do rosto - da base do nariz ao queixo
-            altura_3t1_rosto = y_boca_ao_centro - y_base_do_nariz
-            altura_3t2_rosto = y_queixo - y_boca_ao_centro
+            altura_3t1 = y_boca_ao_centro - y_base_do_nariz
+            altura_3t1_cm = converter_px_to_cm(tam_iris_px, altura_3t1)
+
+            altura_3t2 = y_queixo - y_boca_ao_centro
+            altura_3t2_cm = converter_px_to_cm(tam_iris_px, altura_3t2)
 
             # Calculando larguras
-            largura_entre_olhos = x_eye_direito_interno - x_eye_esquerdo_interno
-            largura_goniaco_rosto = x_right_goniaco - x_left_goniaco
-            largura_zigomatico_rosto = x_right_zigomatico - x_left_zigomatico
+            larg_iris_cm = converter_px_to_cm(tam_iris_px, tam_iris_px)
+            larg_entre_olhos = x_eye_direito_interno - x_eye_esquerdo_interno
+            larg_entre_olhos_cm = converter_px_to_cm(tam_iris_px, larg_entre_olhos)
+            larg_goniaco = x_right_goniaco - x_left_goniaco
+            larg_goniaco_cm = converter_px_to_cm(tam_iris_px, larg_goniaco)
+            larg_zigomatico = x_right_zigomatico - x_left_zigomatico
+            larg_zigomatico_cm = converter_px_to_cm(tam_iris_px, larg_zigomatico)
 
             ##########################################
             # EXIBIR TEXTOS
             # Exibir texto no image
             cv2.putText(image, f"{now_date_time}", (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
-            cv2.putText(image, f"Tam Iris: {converter_px_to_cm(tam_iris_px, tam_iris_px)}cm ({tam_iris_px}px)", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
-            cv2.putText(image, f"Alt Olhos ao Nariz: {converter_px_to_cm(tam_iris_px, altura_2t_rosto)}cm ({altura_2t_rosto}px)", (10, 65), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
-            cv2.putText(image, f"Alt Nariz ao Queixo: {converter_px_to_cm(tam_iris_px, altura_3t_rosto)}cm ({altura_3t_rosto}px)", (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
-            cv2.putText(image, f"Alt Nariz a Boca: {converter_px_to_cm(tam_iris_px, altura_3t1_rosto)}cm ({altura_3t1_rosto}px)", (10, 95), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
-            cv2.putText(image, f"Alt Boca ao Queixo: {converter_px_to_cm(tam_iris_px, altura_3t2_rosto)}cm ({altura_3t2_rosto}px)", (10, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
-            cv2.putText(image, f"Larg Entre olhos: {converter_px_to_cm(tam_iris_px, largura_entre_olhos)}cm ({largura_entre_olhos}px)", (10, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
-            cv2.putText(image, f"Zigomatico: {converter_px_to_cm(tam_iris_px, largura_zigomatico_rosto)}cm ({largura_zigomatico_rosto}px)", (10, 140), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
-            cv2.putText(image, f"Goniaco: {converter_px_to_cm(tam_iris_px, largura_goniaco_rosto)}cm ({largura_goniaco_rosto}px)", (10, 155), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
+            cv2.putText(image, f"Tam Iris: {larg_iris_cm}cm ({tam_iris_px}px)", (10, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
+            cv2.putText(image, f"Alt Olhos ao Nariz: {altura_2t_cm}cm ({altura_2t}px)", (10, 65), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
+            cv2.putText(image, f"Alt Nariz ao Queixo: {altura_3t_cm}cm ({altura_3t}px)", (10, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
+            cv2.putText(image, f"Alt Nariz a Boca: {altura_3t1_cm}cm ({altura_3t1}px)", (10, 95), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
+            cv2.putText(image, f"Alt Boca ao Queixo: {altura_3t2_cm}cm ({altura_3t2}px)", (10, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
+            cv2.putText(image, f"Larg Entre olhos: {larg_entre_olhos_cm}cm ({larg_entre_olhos}px)", (10, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
+            cv2.putText(image, f"Zigomatico: {larg_zigomatico_cm}cm ({larg_zigomatico}px)", (10, 140), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
+            cv2.putText(image, f"Goniaco: {larg_goniaco_cm}cm ({larg_goniaco}px)", (10, 155), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, 1)
 
             ###########################################
             # ESCREVE LINHAS
@@ -161,9 +240,21 @@ if results.multi_face_landmarks:
             stg_date_time = stg_date_time.replace("/","")
             stg_date_time = stg_date_time.replace(":","")
             stg_date_time = stg_date_time.replace(",","")
-            nome_arquivo = f"{IMG_INFO}_analisada_{stg_date_time}.jpg"
+            nome_arquivo = f"{IMG_INFO}_{stg_date_time}.jpg"
             cv2.imwrite(nome_arquivo, imagem_capturada)
-            print(f"Imagem salva como {nome_arquivo}")
+
+            lst_pontos_dict = [ponto.to_dict() for ponto in lst_pontos_estudo]
+
+            analise = Analise(VERSAO, now_date_time, nome_arquivo, tam_iris_px, TAMANHO_IRIS_REAL, 
+                              altura_2t, altura_2t_cm,  altura_3t, altura_3t_cm, 
+                              altura_3t1, altura_3t1_cm, altura_3t2, altura_3t2_cm, 
+                              larg_entre_olhos, larg_entre_olhos_cm, 
+                              larg_goniaco, larg_goniaco_cm,  larg_zigomatico, larg_zigomatico_cm, 
+                              lst_pontos_dict)
+
+            # Gerar um arquivo JSON com as informações do ponto 51
+            with open(f"{IMG_INFO}_{stg_date_time}.json", "w") as arquivo_json:
+                json.dump(analise.to_dict(), arquivo_json, indent=4)
 
             cv2.waitKey(0)
             cv2.destroyAllWindows()
